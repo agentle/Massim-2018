@@ -1,0 +1,61 @@
+
+
+agent Main extends ScheduleTask {
+	module EIS eis;
+	module System S;
+	module Console C;
+	
+	types sim_start {
+		formula seedCapital(int);
+	}
+
+	rule +!main(list args) {
+		S.setSchedulingStrategy("astra.execution.BasicSchedulerStrategy");
+		eis.sensorBlocking(true);
+		eis.launch("massim", "eismassim-3.4-jar-with-dependencies.jar");
+		eis.join();
+		eis.link("connectionA1");
+		eis.startEnv();
+		C.println("STARTED");
+		
+		+my_plan([task("goto", ["workshop1"])]);		
+	}
+	
+	rule +$eis.event(step(int step)) {
+		C.println("beginning step");
+		C.println("step="+step);
+//		eis.goto("workshop3");
+//		eis.goto("workshop1");
+//		eis.link("connectionA2");
+//		eis.goto("workshop2");
+
+		if (my_plan(list X)) {
+			if (~task(string T, list L)) {
+				!next_step();
+			}
+			!execute();
+		}
+		
+//		if (eis.seedCapital(int capital)) {
+//			C.println("it persists"+capital);
+//		}
+//
+	}
+	
+//	rule +$eis.event(seedCapital(int capital)) {
+//		+seedCapital(capital);
+//		C.println("capital = "+capital);
+//	}
+	
+	rule +!doTask("goto", [string destination]) : eis.facility(destination) {
+		!dropTask();
+	}
+	
+	rule +!doTask("goto", [string destination]) {
+		eis.goto(destination);
+	}
+	
+	rule +$eis.event(job(string id, string storage, int reward, int begin, int end, list requirements)) {
+		C.println("");
+	}
+}
